@@ -48,13 +48,13 @@ PATH = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
 
 def do_setup():
     setup(
-        name="pehuen",
+        name="qollca",
         description="Corrections for the redshift distortion",
         author=["Noelia Rocío Perez", "Claudio Antonio Lopez Cortez"],
         url="https://github.com/exiliadadelsur/Bartolina",
         license="MIT",
         keywords=["space redshift", "kaiser", "finger of god", "fog"],
-        packages=["pehuen"],
+        packages=["qollca"],
         install_requires=REQUIREMENTS,
     )
 

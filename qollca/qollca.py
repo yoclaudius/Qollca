@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from astropy.stats import bootstrap
+from astropy.utils import NumpyRNGContext
 
 def sigma_5():
     pass
@@ -53,8 +54,20 @@ def monte_carlo(datos, bines, rango, grafico=False, test=False):
 def catalog_corr():
     pass
 
-def bootstrap(datos):
-    pass
+def bootst(columna):
+    #columna=np.array(columna)
+    #with NumpyRNGContext(1):
+    #    bootresult =bootstrap(columna,100,bootfunc=np.mean)    
+    #error=bootresult.std()    
+    
+    var = len(columna)
+    medias = np.zeros(100)
+    for i in range(100):
+        medias[i] = np.random.choice(columna, size=var, replace=True).mean() 
+    error = medias.std()
+    
+    return error    
+
 
 
 def jackknife():
