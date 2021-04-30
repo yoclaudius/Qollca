@@ -54,28 +54,69 @@ def monte_carlo(datos, bines, rango, grafico=False, test=False):
 def catalog_corr():
     pass
 
-def bootst(columna):
-    #columna=np.array(columna)
-    #with NumpyRNGContext(1):
-    #    bootresult =bootstrap(columna,100,bootfunc=np.mean)    
-    #error=bootresult.std()    
     
-    var = len(columna)
-    medias = np.zeros(100)
-    for i in range(100):
-        medias[i] = np.random.choice(columna, size=var, replace=True).mean() 
-    error = medias.std()
-    
+def bootstrap_error(columna):
+    with NumpyRNGContext(1):
+        bootresult =bootstrap(columna,100,bootfunc=np.mean)    
+    error=bootresult.std()        
     return error    
 
 
+def jackknife(columna):
+    numdatos = len(columna)
+    medias = np.zeros(100)
+    for i in range(100):
+        medias[i] = (np.random.choice(columna, numdatos-1)).mean()
+    error = medias.std(ddof=1)
+    return error
 
-def jackknife():
-    pass
 
 def Luminosity_function():
     pass
 
 
+def hist2dmatriz(columna_x, columna_y, bines_x, bines_y):
+    """
+    
+
+    Parameters
+    ----------
+    columna_x : array_like
+        DESCRIPTION.
+    columna_y : array_like
+        DESCRIPTION.
+    bines_x : int
+        DESCRIPTION.
+    bines_y : int
+        DESCRIPTION.
+
+    Returns
+    -------
+    matriz : ndarray
+        DESCRIPTION.
+
+    Example
+    -------
+    >>> import qollca
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> x = np.random.normal(size=1000)
+    >>> y = np.random.normal(size=1000)
+    >>> matriz = qollca.hist2dmatriz(x,y,10,10)
+    >>> plt.contourf(matriz)
+
+    """
+
+    
+    limbines_x = np.linspace(columna_x.min(), columna_x.max(), bines_x + 1)
+    limbines_y = np.linspace(columna_y.min(), columna_y.max(), bines_y + 1)
+    matriz = np.zeros([bines_y,bines_x])
+    for liminfcol_i, limsupcol_i, j in zip(limbines_x[:-1],limbines_x[1:],range(bines_x + 1)):
+        for liminffil_i, limsupfil_i, i in zip(limbines_y[:-1],limbines_y[1:],range(bines_y + 1)):
+            a = (columna_x > liminfcol_i) * (columna_x < limsupcol_i)
+            b = (columna_y > liminffil_i) * (columna_y < limsupfil_i)
+            mascara = a * b
+            matriz[i,j] = np.sum(mascara)            
+    return matriz        
 
 
