@@ -12,7 +12,7 @@ class Muestra_control():
     def m_c():
         pass
 
-    def identificacion_cruzada():
+    def r_c():
         pass
 
 
