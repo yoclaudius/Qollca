@@ -12,8 +12,114 @@ class Muestra_control():
     def m_c():
         pass
 
-    def identificacion_cruzada():
-        pass
+    def rand_selec(mp, ms, nc1, nc2, nc3, nc4, delta1, delta2, delta3, delta4):
+        """
+        
+
+        Parameters
+        ----------
+        columna_x : array_like
+            DESCRIPTION.
+        columna_y : array_like
+            DESCRIPTION.
+        bines_x : int
+            DESCRIPTION.
+        bines_y : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        matriz : ndarray
+            DESCRIPTION.
+
+        Example
+        -------
+        Columna1 = mp[nc1]
+        Columna2 = ms[nc1]
+        Columna1 = Columna1[Columna1<Columna1.quantile(q=0.99)]
+        Columna1 = Columna1[Columna1>Columna1.quantile(q=0.01)]
+        Columna2 = Columna2[Columna2<Columna2.quantile(q=0.99)]
+        Columna2 = Columna2[Columna2>Columna2.quantile(q=0.01)]
+        CantidadBines = 30
+        pesos1 = np.ones_like(Columna1)/float(len(Columna1))
+        pesos2 = np.ones_like(Columna2)/float(len(Columna2))
+        plt.figure(figsize=(1.4*6.4,1.4*4.8),constrained_layout=True)
+        bines=np.linspace(Columna1.min(),Columna1.max(),CantidadBines)
+        plt.hist(Columna1,bins=bines,weights=pesos1, color='b',histtype='step',
+                lw=3,alpha=0.75,label='HERGs')
+        plt.hist(Columna2,bins=bines,weights=pesos2, color='indigo',histtype='step',
+                linestyle=':',lw=4,alpha=1,label='ControlHERGs')
+        plt.legend(loc='upper right',fontsize=16,frameon=False)
+        plt.xlabel(r'$log_{10}(M_{\ast} / M_{\odot})$',fontsize=16)
+        plt.tick_params(labelsize=16)
+        plt.show()
+
+        """        
+        
+        #Se establecen rangos de masa y luminosidad
+        d1 = delta1
+        d2 = delta2
+        d3 = delta3
+        d4 = delta4
+
+        #Se agragan, a las AGNs, columnas con los limites en redshift, magnitud, masa y
+        #d4000
+        mp[nc1 + 'min'] = mp[nc1] - d1
+        mp[nc1 + 'max'] = mp[nc1] + d1
+        mp[nc2 + 'min'] = mp[nc2] - d2
+        mp[nc2 + 'max'] = mp[nc2] + d2
+        mp[nc3 + 'min'] = mp[nc3] - d3
+        mp[nc3 + 'max'] = mp[nc3] + d3
+        mp[nc4 + 'min'] = mp[nc4] - d4
+        mp[nc4 + 'max'] = mp[nc4] + d4
+        #Se agrega una columna para indicar la galaxia AGN de la cual es galaxia
+        #de control
+        ms['EsControl_oNo'] = np.zeros(len(ms))
+        mp['HERGSeleccionada_oNo'] = np.zeros(len(mp))
+        ms['HERGdeLaQueEsControl']=np.zeros(len(ms))
+
+        np.random.seed(seed=3001)
+        for i in range(int(len(mp))):
+        #def fun1(i):   
+            # SELECCIONO LOS INDICES DEL GRUPO DE HERGs SIN SELECCIONAR
+            HergsNoSelec = (mp.groupby(['HERGSeleccionada_oNo']).get_group(0)).index
+            # ELIJO ALEATORIAMENTE UNA DE LAS HERG SIN CONTROL
+            indiceHERG = np.random.choice(HergsNoSelec)
+            # Marco a la HERG seleccionada
+            mp['HERGSeleccionada_oNo'].iloc[indiceHERG] = 1    
+            # SELECCIONON EL GRUPO DE GALAXIAS NO ACTIVAS SIN SELECCIONAR
+            noAGNsSinSelec = ms.groupby(['EsControl_oNo']).get_group(0)
+            # Se indican las galaxias que sirven como control
+            Var = noAGNsSinSelec[((noAGNsSinSelec[nc1] >=
+                                mp[nc1 + 'min'].iloc[indiceHERG])&
+                                (noAGNsSinSelec[nc1] <=
+                                mp[nc1 + 'max'].iloc[indiceHERG])&
+                                (noAGNsSinSelec[nc2] >=
+                                mp[nc2 + 'min'].iloc[indiceHERG])&
+                                (noAGNsSinSelec[nc2] <=
+                                mp[nc2 + 'max'].iloc[indiceHERG])&
+                                (noAGNsSinSelec[nc3] >=
+                                mp[nc3 + 'min'].iloc[indiceHERG])&
+                                (noAGNsSinSelec[nc3] <=
+                                mp[nc3 + 'max'].iloc[indiceHERG])&
+                                (noAGNsSinSelec[nc4] >=
+                                mp[nc4 + 'min'].iloc[indiceHERG])&
+                                (noAGNsSinSelec[nc4] <=
+                                mp[nc4 + 'max'].iloc[indiceHERG]))]
+            # SELECCIONO LOS INDICES DE LA MASCARA ANTERIOR
+            Var = Var.index
+            # ELIJO ALEATORIAMENTE UNA DE LAS GALAXIAS ACTIVAS SIN SELECCIONAR    
+            indiceNoAGN = np.random.choice(Var)
+            # SE MARACA A LA GALAXIA NO ACTIVA SELECCIONADA
+            ms['EsControl_oNo'].iloc[indiceNoAGN]=1
+            # SE INDICA CUAL ES LA GALAXIA HERG DE LA QUE ES CONTROL LA GALAXIA NO ACTIVA
+            ms['HERGdeLaQueEsControl'].iloc[indiceNoAGN]=indiceHERG
+
+        #fun1(mp['MPA_IDX'])
+        
+        #Se filtra y eliminan columnas            
+        ms = ms[ms['EsControl_oNo']==1]
+        return ms
 
 
 def monte_carlo(datos, bines, rango, grafico=False, test=False):
