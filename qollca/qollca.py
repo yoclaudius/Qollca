@@ -12,7 +12,7 @@ class Muestra_control():
     def m_c():
         pass
 
-    def rand_selec(mp, ms, nc1, nc2, nc3, nc4, delta1, delta2, delta3, delta4):
+    def rand_selec(mp, ms, nc1, nc2, nc3, delta1, delta2, delta3):
         """
         
 
@@ -113,7 +113,7 @@ class Muestra_control():
         d1 = delta1
         d2 = delta2
         d3 = delta3
-        d4 = delta4
+        #d4 = delta4
 
         #Se agragan, a las AGNs, columnas con los limites en redshift, magnitud, masa y
         #d4000
@@ -123,8 +123,8 @@ class Muestra_control():
         mp[nc2 + 'max'] = mp[nc2] + d2
         mp[nc3 + 'min'] = mp[nc3] - d3
         mp[nc3 + 'max'] = mp[nc3] + d3
-        mp[nc4 + 'min'] = mp[nc4] - d4
-        mp[nc4 + 'max'] = mp[nc4] + d4
+        #mp[nc4 + 'min'] = mp[nc4] - d4
+        #mp[nc4 + 'max'] = mp[nc4] + d4
         #Se agrega una columna para indicar la galaxia AGN de la cual es galaxia
         #de control
         ms['ControlGroup'] = np.zeros(len(ms))
@@ -158,11 +158,11 @@ class Muestra_control():
                                 (noAGNsSinSelec[nc3] >=
                                 mp[nc3 + 'min'].iloc[indiceHERG])&
                                 (noAGNsSinSelec[nc3] <=
-                                mp[nc3 + 'max'].iloc[indiceHERG])&
-                                (noAGNsSinSelec[nc4] >=
-                                mp[nc4 + 'min'].iloc[indiceHERG])&
-                                (noAGNsSinSelec[nc4] <=
-                                mp[nc4 + 'max'].iloc[indiceHERG]))]
+                                mp[nc3 + 'max'].iloc[indiceHERG]))]
+                                #(noAGNsSinSelec[nc4] >=
+                                #mp[nc4 + 'min'].iloc[indiceHERG])&
+                                #(noAGNsSinSelec[nc4] <=
+                                #mp[nc4 + 'max'].iloc[indiceHERG]))]
             # SELECCIONO LOS INDICES DE LA MASCARA ANTERIOR
             Var = Var.index
             if len(Var) != 0:
