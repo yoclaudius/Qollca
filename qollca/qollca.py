@@ -15,6 +15,7 @@ class Muestra_control():
     def rand_selec(mp, ms, nc1, nc2, nc3, nc4, delta1, delta2, delta3, delta4):
         """
         
+
         Parameters
         ----------
         columna_x : array_like
@@ -25,7 +26,7 @@ class Muestra_control():
             DESCRIPTION.
         bines_y : int
             DESCRIPTION.
-            
+
         Returns
         -------
         matriz : ndarray
@@ -144,6 +145,7 @@ class Muestra_control():
             mp.loc[indiceHERG, 'GalSel'] = 1
             # SELECCIONON EL GRUPO DE GALAXIAS NO ACTIVAS SIN SELECCIONAR
             noAGNsSinSelec = ms.groupby(['ControlGroup']).get_group(0)
+
             # Se indican las galaxias que sirven como control
             Var = noAGNsSinSelec[((noAGNsSinSelec[nc1] >=
                                 mp[nc1 + 'min'].iloc[indiceHERG])&
