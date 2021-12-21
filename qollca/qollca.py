@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from astropy.stats import bootstrap
 from astropy.utils import NumpyRNGContext
+from astropy.cosmology import LambdaCDM
 
 def sigma_5():
     pass
@@ -167,7 +168,7 @@ def jackknife(columna):
     return error
 
 
-def luminosity_function(ms):
+def luminosity_function(ms, n_reddening, n_redshift):
     """
         
 
@@ -191,18 +192,23 @@ def luminosity_function(ms):
     -------
     from astropy.table import Table
     import qollca
-    import matplotlib.pyplot as plt
-    dir = '/usr/local/datos/Tesis de grado/Datos_iniciales/'
-    nom = 'HERG.fits'
+    dir = '/usr/local/datos/Tesis de grado/llllllllllllllll/'
+    nom = 'ms.fits'
     mainsample = Table.read(dir + nom)
+    mainsample = mainsample[mainsample['dered_g'] > 0]
 
-    luminosity_function(mainsample) 
+    qollca.luminosity_function(mainsample, 'dered_r', 'z')
 
-    # Grafico de FL
-    Xinf = -22.7
-    Xsup = -17
-    bins = np.linspace(Xinf,Xsup,30)
-    gc.f_FL(mainsample['Mr'], mainsample['1/Vmax'], bins, Xinf, Xsup)
+    import matplotlib.pyplot as plt
+    import numpy as np
+    frec, lim = np.histogram(mainsample['Mr'], weights=mainsample['1/Vmax']
+                             ,bins=30)
+    bin_centers = 0.5 * (lim[1:] + lim[:-1])
+    ancho_bin = lim[2] - lim[1]
+    frec = frec / ancho_bin
+    plt.plot(bin_centers, frec, lw=1, ls='--', marker='o', alpha=0.5)
+    plt.gca().invert_xaxis()
+    plt.yscale('logit')
 
     """
     H0 = 100.    # Hubble constant
@@ -216,38 +222,45 @@ def luminosity_function(ms):
     z_min = 0.03
 
     # Se calcula la distancia de luminosidad (Mpc)
-    luminosity_distance = np.vectorize(cosmo.luminosity_distance)
-    ms['DL'] = cosmo.luminosity_distance(ms['z']).value
+    ms['DL'] = cosmo.luminosity_distance(ms[n_redshift]).value
     # Se calcula el modulo de distancia
     ms['DM'] = 5 * np.log10(ms['DL'])
     # Se calcula la magnitud absoluta
-    ms['Mr'] = ms['dered_r'] - ms['DM'] - 25
+    ms['Mr'] = ms[n_reddening] - ms['DM'] - 25
     # Se obtiene la distancia maxima a la cual es posible observar cada galaxia    
     ms['Dmax'] = np.zeros(len(ms))
     for i in range(len(ms)):
+        print('Objeto trabajado en dist max: ', i)
         m = 0
-        z = ms['z'].iloc[i]
+        #z = ms[n_redshift].iloc[i]
+        z = ms[n_redshift][i]
         while m_lim > m:
             # Calculo modulo de distancia
             DL = cosmo.luminosity_distance(z).value
             DM = 5 * np.log10(DL)
             # Se calcula la magnitud aparente
-            m = ms['Mr'].iloc[i] + 25 + DM
+            #m = ms['Mr'].iloc[i] + 25 + DM
+            m = ms['Mr'][i] + 25 + DM
             z = z + 0.01
-        ms.loc[i,'Dmax'] = DL
+        #ms.loc[i,'Dmin'] = DL
+        ms['Dmax'][i] = DL
     # Se obtiene la distancia minima a la cual es posible observar cada galaxia
     ms['Dmin'] = np.zeros(len(ms))
     for i in range(len(ms)):
-        m=99
-        z = ms['z'].iloc[i]
+        print('Objeto trabajado en dist min: ', i)
+        m = 99
+        #z = ms[n_redshift].iloc[i]
+        z = ms[n_redshift][i]
         while m_limmin < m and z > z_min:
             # Calculo modulo de distancia
             DL = cosmo.luminosity_distance(z).value
             DM = 5 * np.log10(DL)
             # Se calcula la magnitud aparente
-            m = ms['Mr'].iloc[i] + 25 + DM
+            #m = ms['Mr'].iloc[i] + 25 + DM
+            m = ms['Mr'][i] + 25 + DM
             z = z - 0.01
-        ms.loc[i,'Dmin'] = DL
+        #ms.loc[i,'Dmin'] = DL
+        ms['Dmin'][i] = DL
     # Se obtiene el Vmax
     ms['Vmax'] = ((ms['Dmax']**3 - ms['Dmin']**3) * 2.23226371519234) / 3
     # ms['Vmax'] = ((ms['Dmax']**3) * 2.23226371519234) / 3
