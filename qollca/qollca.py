@@ -167,8 +167,92 @@ def jackknife(columna):
     return error
 
 
-def Luminosity_function():
-    pass
+def luminosity_function(ms):
+    """
+        
+
+    Parameters
+    ----------
+    columna_x : array_like
+        DESCRIPTION.
+    columna_y : array_like
+        DESCRIPTION.
+    bines_x : int
+        DESCRIPTION.
+    bines_y : int
+        DESCRIPTION.
+
+    Returns
+    -------
+    matriz : ndarray
+        DESCRIPTION.
+            
+    Example
+    -------
+    from astropy.table import Table
+    import qollca
+    import matplotlib.pyplot as plt
+    dir = '/usr/local/datos/Tesis de grado/Datos_iniciales/'
+    nom = 'HERG.fits'
+    mainsample = Table.read(dir + nom)
+
+    luminosity_function(mainsample) 
+
+    # Grafico de FL
+    Xinf = -22.7
+    Xsup = -17
+    bins = np.linspace(Xinf,Xsup,30)
+    gc.f_FL(mainsample['Mr'], mainsample['1/Vmax'], bins, Xinf, Xsup)
+
+    """
+    H0 = 100.    # Hubble constant
+    Omm = 0.3     # Omega matter
+    Oml = 0.7     # Omega lambda
+
+    cosmo = LambdaCDM(H0=H0, Om0=Omm, Ode0=Oml)
+
+    m_lim = 17.7
+    m_limmin = 14.5
+    z_min = 0.03
+
+    # Se calcula la distancia de luminosidad (Mpc)
+    luminosity_distance = np.vectorize(cosmo.luminosity_distance)
+    ms['DL'] = cosmo.luminosity_distance(ms['z']).value
+    # Se calcula el modulo de distancia
+    ms['DM'] = 5 * np.log10(ms['DL'])
+    # Se calcula la magnitud absoluta
+    ms['Mr'] = ms['dered_r'] - ms['DM'] - 25
+    # Se obtiene la distancia maxima a la cual es posible observar cada galaxia    
+    ms['Dmax'] = np.zeros(len(ms))
+    for i in range(len(ms)):
+        m = 0
+        z = ms['z'].iloc[i]
+        while m_lim > m:
+            # Calculo modulo de distancia
+            DL = cosmo.luminosity_distance(z).value
+            DM = 5 * np.log10(DL)
+            # Se calcula la magnitud aparente
+            m = ms['Mr'].iloc[i] + 25 + DM
+            z = z + 0.01
+        ms.loc[i,'Dmax'] = DL
+    # Se obtiene la distancia minima a la cual es posible observar cada galaxia
+    ms['Dmin'] = np.zeros(len(ms))
+    for i in range(len(ms)):
+        m=99
+        z = ms['z'].iloc[i]
+        while m_limmin < m and z > z_min:
+            # Calculo modulo de distancia
+            DL = cosmo.luminosity_distance(z).value
+            DM = 5 * np.log10(DL)
+            # Se calcula la magnitud aparente
+            m = ms['Mr'].iloc[i] + 25 + DM
+            z = z - 0.01
+        ms.loc[i,'Dmin'] = DL
+    # Se obtiene el Vmax
+    ms['Vmax'] = ((ms['Dmax']**3 - ms['Dmin']**3) * 2.23226371519234) / 3
+    # ms['Vmax'] = ((ms['Dmax']**3) * 2.23226371519234) / 3
+    # Se obtienen los pesos
+    ms['1/Vmax'] = 1 / ms['Vmax']
 
 
 def hist2dmatriz(columna_x, columna_y, bines_x, bines_y):
@@ -212,7 +296,9 @@ def hist2dmatriz(columna_x, columna_y, bines_x, bines_y):
             a = (columna_x > liminfcol_i) * (columna_x < limsupcol_i)
             b = (columna_y > liminffil_i) * (columna_y < limsupfil_i)
             mascara = a * b
-            matriz[i,j] = np.sum(mascara)            
+            matriz[i,j] = np.sum(mascara)
     return matriz        
 
 
+def muestra_limpia():
+    pass
