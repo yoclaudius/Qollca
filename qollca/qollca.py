@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from astropy.stats import bootstrap
 from astropy.utils import NumpyRNGContext
+from astropy.cosmology import LambdaCDM
 
 def sigma_5():
     pass
@@ -109,74 +110,7 @@ class Muestra_control():
         
         """        
         
-        #Se establecen rangos de masa y luminosidad
-        d1 = delta1
-        d2 = delta2
-        d3 = delta3
-        #d4 = delta4
-
-        #Se agragan, a las AGNs, columnas con los limites en redshift, magnitud, masa y
-        #d4000
-        mp[nc1 + 'min'] = mp[nc1] - d1
-        mp[nc1 + 'max'] = mp[nc1] + d1
-        mp[nc2 + 'min'] = mp[nc2] - d2
-        mp[nc2 + 'max'] = mp[nc2] + d2
-        mp[nc3 + 'min'] = mp[nc3] - d3
-        mp[nc3 + 'max'] = mp[nc3] + d3
-        #mp[nc4 + 'min'] = mp[nc4] - d4
-        #mp[nc4 + 'max'] = mp[nc4] + d4
-        #Se agrega una columna para indicar la galaxia AGN de la cual es galaxia
-        #de control
-        ms['ControlGroup'] = np.zeros(len(ms))
-        mp['GalSel'] = np.zeros(len(mp))
-        ms['idGalControl']=np.zeros(len(ms))
-
-        cont = 0
-        np.random.seed(seed=3001)
-        for i in range(int(len(mp))):
-            cont += 1
-            if (cont % 10 == 0):
-                print('Objetos restantes: ', len(mp) - cont)
-            # SELECCIONO LOS INDICES DEL GRUPO DE HERGs SIN SELECCIONAR
-            HergsNoSelec = (mp.groupby(['GalSel']).get_group(0)).index
-            # ELIJO ALEATORIAMENTE UNA DE LAS HERG SIN CONTROL
-            indiceHERG = np.random.choice(HergsNoSelec)
-            # Marco a la HERG seleccionada
-            mp.loc[indiceHERG, 'GalSel'] = 1
-            # SELECCIONON EL GRUPO DE GALAXIAS NO ACTIVAS SIN SELECCIONAR
-            noAGNsSinSelec = ms.groupby(['ControlGroup']).get_group(0)
-
-            # Se indican las galaxias que sirven como control
-            Var = noAGNsSinSelec[((noAGNsSinSelec[nc1] >=
-                                mp[nc1 + 'min'].iloc[indiceHERG])&
-                                (noAGNsSinSelec[nc1] <=
-                                mp[nc1 + 'max'].iloc[indiceHERG])&
-                                (noAGNsSinSelec[nc2] >=
-                                mp[nc2 + 'min'].iloc[indiceHERG])&
-                                (noAGNsSinSelec[nc2] <=
-                                mp[nc2 + 'max'].iloc[indiceHERG])&
-                                (noAGNsSinSelec[nc3] >=
-                                mp[nc3 + 'min'].iloc[indiceHERG])&
-                                (noAGNsSinSelec[nc3] <=
-                                mp[nc3 + 'max'].iloc[indiceHERG]))]
-                                #(noAGNsSinSelec[nc4] >=
-                                #mp[nc4 + 'min'].iloc[indiceHERG])&
-                                #(noAGNsSinSelec[nc4] <=
-                                #mp[nc4 + 'max'].iloc[indiceHERG]))]
-            # SELECCIONO LOS INDICES DE LA MASCARA ANTERIOR
-            Var = Var.index
-            if len(Var) != 0:
-                # ELIJO ALEATORIAMENTE UNA DE LAS GALAXIAS ACTIVAS SIN SELECCIONAR    
-                indiceNoAGN = np.random.choice(Var)
-                # SE MARACA A LA GALAXIA NO ACTIVA SELECCIONADA
-                ms.loc[indiceNoAGN, 'ControlGroup'] = 1
-                # SE INDICA CUAL ES LA GALAXIA HERG DE LA QUE ES CONTROL LA GALAXIA NO ACTIVA
-                ms.loc[indiceNoAGN, 'idGalControl'] = indiceHERG
-        
-        #Se filtra y eliminan columnas            
-        salidacontroles = ms[ms['ControlGroup']==1]
-        salidanocontroles = ms[ms['ControlGroup']==0]
-        return salidacontroles, salidanocontroles
+        pass
 
 
 def monte_carlo(datos, bines, rango, grafico=False, test=False):
@@ -234,8 +168,104 @@ def jackknife(columna):
     return error
 
 
-def Luminosity_function():
-    pass
+def luminosity_function(ms, n_reddening, n_redshift):
+    """
+        
+
+    Parameters
+    ----------
+    columna_x : array_like
+        DESCRIPTION.
+    columna_y : array_like
+        DESCRIPTION.
+    bines_x : int
+        DESCRIPTION.
+    bines_y : int
+        DESCRIPTION.
+
+    Returns
+    -------
+    matriz : ndarray
+        DESCRIPTION.
+            
+    Example
+    -------
+    from astropy.table import Table
+    import qollca
+    dir = '/usr/local/datos/Tesis de grado/llllllllllllllll/'
+    nom = 'ms.fits'
+    mainsample = Table.read(dir + nom)
+    mainsample = mainsample[mainsample['dered_g'] > 0]
+
+    qollca.luminosity_function(mainsample, 'dered_r', 'z')
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+    frec, lim = np.histogram(mainsample['Mr'], weights=mainsample['1/Vmax']
+                             ,bins=30)
+    bin_centers = 0.5 * (lim[1:] + lim[:-1])
+    ancho_bin = lim[2] - lim[1]
+    frec = frec / ancho_bin
+    plt.plot(bin_centers, frec, lw=1, ls='--', marker='o', alpha=0.5)
+    plt.gca().invert_xaxis()
+    plt.yscale('logit')
+
+    """
+    H0 = 100.    # Hubble constant
+    Omm = 0.3     # Omega matter
+    Oml = 0.7     # Omega lambda
+
+    cosmo = LambdaCDM(H0=H0, Om0=Omm, Ode0=Oml)
+
+    m_lim = 17.7
+    m_limmin = 14.5
+    z_min = 0.03
+
+    # Se calcula la distancia de luminosidad (Mpc)
+    ms['DL'] = cosmo.luminosity_distance(ms[n_redshift]).value
+    # Se calcula el modulo de distancia
+    ms['DM'] = 5 * np.log10(ms['DL'])
+    # Se calcula la magnitud absoluta
+    ms['Mr'] = ms[n_reddening] - ms['DM'] - 25
+    # Se obtiene la distancia maxima a la cual es posible observar cada galaxia    
+    ms['Dmax'] = np.zeros(len(ms))
+    for i in range(len(ms)):
+        print('Objeto trabajado en dist max: ', i)
+        m = 0
+        #z = ms[n_redshift].iloc[i]
+        z = ms[n_redshift][i]
+        while m_lim > m:
+            # Calculo modulo de distancia
+            DL = cosmo.luminosity_distance(z).value
+            DM = 5 * np.log10(DL)
+            # Se calcula la magnitud aparente
+            #m = ms['Mr'].iloc[i] + 25 + DM
+            m = ms['Mr'][i] + 25 + DM
+            z = z + 0.01
+        #ms.loc[i,'Dmin'] = DL
+        ms['Dmax'][i] = DL
+    # Se obtiene la distancia minima a la cual es posible observar cada galaxia
+    ms['Dmin'] = np.zeros(len(ms))
+    for i in range(len(ms)):
+        print('Objeto trabajado en dist min: ', i)
+        m = 99
+        #z = ms[n_redshift].iloc[i]
+        z = ms[n_redshift][i]
+        while m_limmin < m and z > z_min:
+            # Calculo modulo de distancia
+            DL = cosmo.luminosity_distance(z).value
+            DM = 5 * np.log10(DL)
+            # Se calcula la magnitud aparente
+            #m = ms['Mr'].iloc[i] + 25 + DM
+            m = ms['Mr'][i] + 25 + DM
+            z = z - 0.01
+        #ms.loc[i,'Dmin'] = DL
+        ms['Dmin'][i] = DL
+    # Se obtiene el Vmax
+    ms['Vmax'] = ((ms['Dmax']**3 - ms['Dmin']**3) * 2.23226371519234) / 3
+    # ms['Vmax'] = ((ms['Dmax']**3) * 2.23226371519234) / 3
+    # Se obtienen los pesos
+    ms['1/Vmax'] = 1 / ms['Vmax']
 
 
 def hist2dmatriz(columna_x, columna_y, bines_x, bines_y):
@@ -279,7 +309,9 @@ def hist2dmatriz(columna_x, columna_y, bines_x, bines_y):
             a = (columna_x > liminfcol_i) * (columna_x < limsupcol_i)
             b = (columna_y > liminffil_i) * (columna_y < limsupfil_i)
             mascara = a * b
-            matriz[i,j] = np.sum(mascara)            
+            matriz[i,j] = np.sum(mascara)
     return matriz        
 
 
+def muestra_limpia():
+    pass
