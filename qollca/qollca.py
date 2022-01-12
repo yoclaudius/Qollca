@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import scipy
 from astropy.stats import bootstrap
 from astropy.utils import NumpyRNGContext
 from astropy.cosmology import LambdaCDM
@@ -315,3 +316,14 @@ def hist2dmatriz(columna_x, columna_y, bines_x, bines_y):
 
 def muestra_limpia():
     pass
+
+class metnumastr():
+    
+    def lu_metod(a, b):
+        # l*y = b
+        # u*x = y
+        # x = u-1 * (l-1 * b)
+        P, L, U = scipy.linalg.lu(A)
+        L_inv = scipy.linalg.inv(L)
+        U_inv = scipy.linalg.inv(U)
+        return U_inv @ (L_inv @ b)
